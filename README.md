@@ -9,6 +9,23 @@ This project was inspired by a beginner flight price prediction workflow from tk
 ## Dataset
 The DOT DB1B Origin and Destination Survey is a 10% sample of airline tickets from reporting carriers. The Market table contains directional origin-destination market records with information such as origin, destination, passengers, fares, distances, and carrier details.
 
+## Understanding `MktFare` (Important Caveat)
+
+The target variable `MktFare` is the **reported market fare** for a DB1B market record. It reflects real pricing data, but it does **not always equal the full cash price a customer paid for a standalone flight**.
+
+Important nuances:
+
+- **Market-level, not always ticket-level:** DB1B stores fares at the origin–destination market level. On multi-segment trips (`MktCoupons > 1`), the total ticket fare can be **prorated across segments**, so one market may show a very low fare (e.g. $5.50) even when the full itinerary cost much more.
+- **Very low fares are often non-standard:** Extremely low values (such as `$5.00` or `$5.50`) frequently appear on long-distance routes and are likely special or allocated fares (for example award travel, companion tickets, or reporting/proration effects), not typical paid economy prices.
+- **What this project predicts:** The model aims to predict **expected reported market fare** in DB1B based on route, carrier, distance, and demand characteristics — not a live quote from an airline booking site.
+
+Cleaning approach used to improve interpretability:
+
+- Remove invalid fares/distances (`MktFare <= 0`, `MktMilesFlown <= 0`)
+- Exclude bulk fares where appropriate (`BulkFare == 0`)
+- Focus on simpler itineraries where possible (`MktCoupons == 1`)
+- Trim extreme fare outliers (e.g. 1st–99th percentile) before modelling
+
 ## Business Questions
 1. Which US airline routes have the highest and lowest average fares?
 2. Which routes carry the most passengers?
